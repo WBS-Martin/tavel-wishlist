@@ -1,3 +1,5 @@
+import { validationResult } from 'express-validator';
+
 const countries = [
   {
     id: 1,
@@ -25,10 +27,11 @@ const countries = [
   }
 ];
 
-const findCountry = country =>
-  countries.findIndex(
-    c => c.alpha2Code === country.alpha2Code || c.alpha3Code === country.alpha3Code
-  );
+const findCountry = code => {
+  if (!code) return null;
+  const countryCode = code.toUpperCase();
+  return countries.find(c => c.alpha2Code === countryCode || c.alpha3Code === countryCode);
+};
 
 export const getAllCountries = (req, res) => {
   const {
@@ -39,10 +42,24 @@ export const getAllCountries = (req, res) => {
 };
 
 export const createCountry = (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
   const { body } = req;
   const newCountry = { id: countries.length + 1, ...body };
-  const found = findCountry(body);
-  if (found > 0) return res.status(403).json({ error: 'Country already exists' });
+  const alreadyExists = [findCountry(body.alpha2Code), findCountry(body.alpha3Code)];
+  if (alreadyExists.some(el => el))
+    return res.status(403).json({ error: 'Country already exists' });
   countries.push(newCountry);
   res.status(201).send(newCountry);
+};
+
+export const getSingleCountry = (req, res) => {
+  const {
+    params: { code }
+  } = req;
+  const country = findCountry(code);
+  if (!country) return res.status(404).json({ error: 'Country does not exist' });
+  res.json(country);
 };

@@ -12,7 +12,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "express": "^4.17.3"
+    "express": "^4.17.3",
+    "express-validator": "^6.14.0"
   },
   "devDependencies": {
     "kill-port": "^1.6.1",
